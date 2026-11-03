@@ -1,0 +1,86 @@
+# Entorno de desarrollo del Sistema Web de Gestión Logística e Inventario (Grupo 6)
+# Requiere que los repos backend y frontend estén clonados junto a este repo:
+#   ./inventario-electronico-infra     (este repo)
+#   ./backend   -> inventario-electronico-backend
+#   ./frontend  -> inventario-electronico-frontend
+# Las rutas se pueden cambiar en .env (BACKEND_PATH / FRONTEND_PATH).
+
+name: grupo6-inventario
+
+services:
+  backend:
+    build:
+      context: ${BACKEND_PATH:-../backend}
+      dockerfile: Dockerfile
+    container_name: app_backend
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ${BACKEND_PATH:-../backend}:/var/www/html
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app_network
+
+  nginx:
+    image: nginx:stable-alpine
+    container_name: app_nginx
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-8000}:80"
+    volumes:
+      - ${BACKEND_PATH:-../backend}:/var/www/html
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - backend
+    networks:
+      - app_network
+
+  db:
+    image: mysql:8.4
+    container_name: app_db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "${DB_EXTERNAL_PORT:-3307}:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - app_network
+
+  frontend:
+    build:
+      context: ${FRONTEND_PATH:-../frontend}
+      dockerfile: Dockerfile
+    container_name: app_frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    volumes:
+      - ${FRONTEND_PATH:-../frontend}:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+      - VITE_PROXY_TARGET=http://nginx
+    depends_on:
+      - nginx
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge
+
+volumes:
+  db_data:
