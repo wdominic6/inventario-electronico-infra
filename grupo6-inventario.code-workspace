@@ -1,0 +1,27 @@
+{
+  "folders": [
+    {
+      "name": "1. Backend (API Laravel 13 - William y Anthony)",
+      "path": "../backend"
+    },
+    {
+      "name": "2. Frontend (SPA Vue 3 - Carlos y Franklin)",
+      "path": "../frontend"
+    },
+    {
+      "name": "3. Infra (Docker Compose y Red)",
+      "path": "."
+    },
+    {
+      "name": "4. Docs (Informes, UML y Planificación - Grupo 6)",
+      "path": "../docs"
+    }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/.git": true,
+      "**/node_modules": true,
+      "**/vendor": true
+    }
+  }
+}
