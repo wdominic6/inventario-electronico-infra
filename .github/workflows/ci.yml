@@ -1,0 +1,22 @@
+name: Infra CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  validate-compose:
+    name: Validar Docker Compose y Nginx
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare environment and validate compose.yaml
+        run: |
+          cp .env.example .env
+          mkdir -p ../backend ../frontend
+          docker compose config --quiet
